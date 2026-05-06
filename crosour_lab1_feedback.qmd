@@ -1,0 +1,151 @@
+---
+title: 'Lab #1: R and Understanding Datasets (30 pts)'
+author: "Camilla Rosour"
+format:
+  html:
+    embed-resources: true
+editor: source
+knitr:
+  opts_chunk:
+    message: false
+---
+```{r}
+library(tidyverse)
+library(rscorecard)
+sc_key("xjjmn0M60XEzCdQlQbtC21vDtscHHhorX5n882Qb") # Replace with your own token!!
+
+scorecard <- sc_init() |>
+  sc_year(2022) |>                 #Note how we are looking at only 2024 data here!
+  sc_filter(stabbr == "MA") |>     #Note how we are looking at only Massachusetts data here!
+  sc_select(unitid, instnm, city, highdeg, control, ugds, adm_rate, costt4_a, costt4_p, pcip27, pctfloan, admcon7, wdraw_orig_yr2_rt, cdr3) |>
+  sc_get()
+```
+
+
+```{r}
+head(scorecard)
+str(scorecard)
+
+```
+
+## Questions
+
+::: {.callout-important}
+###### Question 1 (5 pts)
+See if you can identify a unique key for this dataset. Write some lines of code to determine whether the column you've identified can act as unique key for the data. Hint: You need to check whether the values in the column ever repeat.
+
+
+```{r}
+# Write code to calculate number of rows in scorecard
+nrow(scorecard)
+```
+
+
+```{r}
+# Write code to calculate the number of unique values in the column you've identified as a unique key 
+
+# I used [,1] because the first column represents the unitid of each scool
+uniqueval <- unique(scorecard[,1])
+nrow(uniqueval)
+##TA Feedback: +3 for trying and using nrow, +1 for using unique
+##Total for Q1: 4 points
+```
+
+# Do these numbers match?
+Yes these numbers match.
+##TA Feedback: Please write the above as a comment in the code chunk
+
+
+:::
+
+::: {.callout-important}
+###### Question 2 (5 pts)
+At this point, you've probably figured out that each row in this dataset is a higher education institution. However, there are many different ways that we can define higher education institutions, and that will impact what gets included and excluded in our data. Referencing the Technical Documentation, locate a definition for the unit of observation in this dataset. What institutions are included, and what institutions are excluded? Summarize a definition below.
+
+Higher education institutions recieve federal funding, and in this set, data on a higher education instituions are compiled by looking at the Integrated Postsecondary Education Data System (IPEDS) and including those that participate in Title IV programs or meet similar critera. They exclude those on the IPEDS that do not participate in Title IV programs.
+
+##TA Feedback: This is a great definition and you are the first one so far to include the actual data source +5
+##Total for Q1-Q2: 9 points
+
+:::
+
+::: {.callout-important}
+
+###### Question 3 (5 pts)
+For each of the variable names in the `scorecard` data frame, look up the associated name in the data dictionary. You will need to search for the variable name in the sixth column of the data dictionary (I recommend using Ctrl-F to quickly locate the variable name in the spreadsheet.) Once you've found the variable name, reference column 1 to determine what this variable means, and reference columns 7 and 8 to see what possible values will appear in that column.
+
+Identify one nominal variable, one ordinal variable, one discrete variable, and one continuous variable in `scorecard` and list their variable names below. Then uncomment the lines below and use the `typeof()` function to see how `R` determined their data types. Did any surprise you?
+
+```{r}
+typeof(scorecard$instnm) # nominal
+typeof(scorecard$highdeg) # ordinal
+typeof(scorecard$ugds) # discrete
+typeof(scorecard$adm_rate) # continuous 
+##TA Feedback: Nice job commenting them all, this looks great! Please write what suprised you next time -0.5
+##Total for Q1-Q3: 13.5 points
+```
+
+:::
+
+::: {.callout-important}
+###### Question 4 (5 pts)
+Write code below to recode the `admcon7` variable and store the results in a new variable in `scorecard` called `admcon7_text`. You'll need to look up the values in the data dictionary. If you've done this correctly, running this code should produce a barplot that displays multiple bars.
+
+```{r}
+unique(scorecard[,12])
+unique(scorecard[,1])
+```
+
+```{r}
+#| eval: false
+#| code-fold: false
+scorecard$admcon7_text <-
+  recode(
+    scorecard$admcon7,
+    "1" = "Required",
+            # "2" = "Recommended", TA feedback:why is this line commented out?
+    "3" = "Neither Required nor Recommended",
+            # "4" = "Do not know", TA feedback:why is this line commented out?
+    "5" = "Considered but not required",
+    .default = NA_character_
+  )
+
+ggplot(scorecard, aes(x = admcon7_text)) +
+  geom_bar()
+##TA Feedabck: -1 for missing groups 
+##Total for Q1-Q4: 17.5 points
+```
+
+:::
+
+::: {.callout-important}
+
+###### Question 5 (5 pts)
+In a code chunk below, calculate the number of missing values in both the `costt4_a` and the `costt4_p` columns. Reference the NOTES column in the data dictionary to determine why there are so many `NA` values in these columns. Add a comment to the code chunk below, explaining the reason for missing values in these columns.
+
+```{r}
+# Write code here
+costa <- is.na(scorecard$costt4_a)
+costp <- is.na(scorecard$costt4_p)
+sum(costa, costp)
+
+# Add comment here
+# There are so many missing variables because there is no data from institutions prior to the 2009-2010 school year.
+##TA Feedback: There is missing data becuase costt4_a is only calculated for academic year institutions, while costt4_p is calculated for program year institutions. Not becuase the dataset only spans one year.-2 for incorrect comment
+##Total for Q1-Q5: 20.5 points
+```
+
+:::
+
+::: {.callout-important}
+
+###### Question 6 (5 pts)
+
+Referencing the College Scorecard data documentation, see if you can determine which students are included in calculations of earnings and debt. How might the data’s coverage bias the values that get reported? What might be the social consequences of these biases? Share your ideas on our discussions Slack channel.
+
+##TA Feedback: The dataset actually does the opposite of excluding low-income students by only including students with financial aid or loans. You did answer both questions suffciently though so +5
+##Total for Q1-Q6: 25.5 or 85%
+
+
+:::
+
